@@ -2,15 +2,15 @@
 
 import os, re, sys, ROOT, time, math, filecmp, shutil
 def main():
-    if len(sys.argv) != 3:
+    if len(sys.argv) != 2:
         print 'Usage: '
-        print '   submitAll.py list.txt sample'
+        print '   submitAll.py sample'
         sys.exit(0)
     fileList = open('list.txt')
-    fileInfo = [item for sublist in [map(lambda x:'%s%s' % (info[1],x), os.listdir(info[1])) for info in [line.split() for line in fileList.readlines() if (len(line) > 1 and line.split()[0] == sys.argv[2])]] for item in sublist]
+    fileInfo = [item for sublist in [map(lambda x:'%s%s' % (info[1],x), os.listdir(info[1])) for info in [line.split() for line in fileList.readlines() if (len(line) > 1 and line.split()[0] == sys.argv[1])]] for item in sublist]
     fileList.close()
-    print 'Doing sample %s in %d jobs' % (sys.argv[2], len(fileInfo))
-    writeCondor('submit.%s' % sys.argv[2], sys.argv[2], len(fileInfo))
+    print 'Doing sample %s in %d jobs' % (sys.argv[1], len(fileInfo))
+    writeCondor('submit.%s.condor' % sys.argv[1], sys.argv[1], len(fileInfo))
     
 def writeCondor(fileName, sampleName, numJobs):
     configFile = open(fileName, 'w')
@@ -31,3 +31,7 @@ def writeCondor(fileName, sampleName, numJobs):
     configFile.write('getenv = True\n')
     configFile.write('arguments = $(Process) %s\n' % sampleName)
     configFile.write('Queue %d\n' % numJobs)
+    configFile.close()
+
+if __name__ == "__main__":
+    main()
