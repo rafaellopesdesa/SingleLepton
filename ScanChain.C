@@ -43,6 +43,9 @@ int ScanChain(TChain* chain, int nEvents, TString skimFilePrefix) {
   baby->Branch("lep_mc_p4", &lep_mc_p4);
   int lep_mc_id;
   baby->Branch("lep_mc_id", &lep_mc_id);
+  
+  int type;
+  baby->Branch("type", &type);
 
   LorentzVector met;
   baby->Branch("met", &met);
@@ -137,6 +140,8 @@ int ScanChain(TChain* chain, int nEvents, TString skimFilePrefix) {
       ++nEventsTotal;
 
       // reset
+      type = -1;
+
       gen_els_n = -1.;
       gen_mus_n = -1.;
       gen_taus_n = -1.;
@@ -212,14 +217,12 @@ int ScanChain(TChain* chain, int nEvents, TString skimFilePrefix) {
       vector<int> theJetsIdx;
       for (uint i=0; i<cms3.pfjets_p4().size(); i++) {
 	if (!isLoosePFJet_50nsV1(i)) continue;
-	bool jet_is_lep = false;
-	for (uint j=0; j<cms3.els_p4().size(); j++) {
-	  if (ROOT::Math::VectorUtil::DeltaR(cms3.els_p4().at(j), cms3.pfjets_p4().at(i)) < 0.3) jet_is_lep = true;
-	} 
-	for (uint j=0 ; j<cms3.mus_p4().size(); j++) {
-	  if (ROOT::Math::VectorUtil::DeltaR(cms3.mus_p4().at(j), cms3.pfjets_p4().at(i)) < 0.3) jet_is_lep = true;
-	} 
-	if (jet_is_lep) continue;
+	if (nElectron == 1) {
+	  if (ROOT::Math::VectorUtil::DeltaR(cms3.els_p4().at(theElectronIdx), cms3.pfjets_p4().at(i)) < 0.4) continue;
+	}
+	if (nMuon == 1) {
+	  if (ROOT::Math::VectorUtil::DeltaR(cms3.mus_p4().at(theMuonIdx), cms3.pfjets_p4().at(i)) < 0.4) continue;
+	}
 	if (cms3.pfjets_p4().at(i).pt() < 20.) continue;
 	if (TMath::Abs(cms3.pfjets_p4().at(i).eta()) > 2.5) continue; 
 	theJetsIdx.push_back(i);
@@ -228,6 +231,8 @@ int ScanChain(TChain* chain, int nEvents, TString skimFilePrefix) {
                 
       // Analysis Code
       scale1fb = cms3.evt_scale1fb();
+
+      type = nElectron;
 
       if (nMuon == 1) {
 	lep_p4 = cms3.mus_p4().at(theMuonIdx);
